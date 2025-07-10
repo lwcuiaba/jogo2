@@ -1,178 +1,278 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Jogo da Memória</title>
-<style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    user-select: none;
-  }
-  #game {
-    width: 360px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.85);
-    border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-  }
-  .card {
-    width: 75px;
-    height: 75px;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-    cursor: pointer;
-    perspective: 600px;
-    transition: transform 0.2s ease;
-  }
-  .card:hover:not(.flipped) {
-    transform: scale(1.05);
-  }
-  .card-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
-    transition: transform 0.5s;
-    transform-style: preserve-3d;
-  }
-  .card.flipped .card-inner {
-    transform: rotateY(180deg);
-  }
-  .card-front, .card-back {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 12px;
-    backface-visibility: hidden;
-  }
-  .card-front {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: inset 0 0 8px rgba(255,255,255,0.2);
-    border: 2px solid #fff;
-  }
-  .card-front::after {
-    content: "❓";
-    font-size: 32px;
-    color: #fff;
-  }
-  .card-back {
-    background: #fff;
-    transform: rotateY(180deg);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    border: 2px solid #764ba2;
-    box-shadow: 0 0 10px rgba(118, 75, 162, 0.7);
-  }
-  .card-back img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 10px;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jogo da Memória</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    #game {
+      width: 360px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      position: relative;
+      z-index: 1;
+    }
+
+    .card {
+      width: 75px;
+      height: 75px;
+      border-radius: 12px;
+      cursor: pointer;
+      perspective: 600px;
+      transition: transform 0.2s ease;
+      position: relative;
+    }
+
+    .card:hover:not(.flipped) {
+      transform: scale(1.05);
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      transition: transform 0.5s ease;
+      transform-style: preserve-3d;
+      position: relative;
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 12px;
+    }
+
+    .card-front {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 32px;
+      color: #fff;
+      border: 2px solid #fff;
+    }
+
+    .card-front::after {
+      content: "❓";
+    }
+
+    .card-back {
+      background: #fff;
+      transform: rotateY(180deg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      border: 2px solid #764ba2;
+      box-shadow: 0 0 10px rgba(118, 75, 162, 0.7);
+    }
+
+    .card-back img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .matched {
+      animation: glow 0.6s ease-out;
+    }
+
+    @keyframes glow {
+      0% {
+        box-shadow: 0 0 0px rgba(0, 255, 0, 0.7);
+        transform: scale(1.1);
+      }
+      100% {
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.9);
+        transform: scale(1);
+      }
+    }
+
+    #victory {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 360px;
+      height: 100%;
+      background: rgba(255,255,255,0.95);
+      border-radius: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      animation: fadeIn 1s ease forwards;
+    }
+
+    #victory h1 {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    #victory button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #667eea;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        pointer-events: all;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div id="game"></div>
+  <div id="game"></div>
 
-<script>
-const images = [
-  'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/AGATHA.png',
-  'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/DAYANNE.jpg',
-  'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/LOLA.jpeg',
-  'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/AMORA.jpeg',
-  'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/MIGUEL.jpeg',
-  'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/FEFE.jpeg',
-  'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/MIA.jpeg',
-  'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/LEANDRO.png',
-];
+  <div id="victory" style="display: none;">
+    <h1>🎉 Parabéns! Você venceu! 🎉</h1>
+    <button onclick="init()">Jogar Novamente</button>
+  </div>
 
-  const game = document.getElementById('game');
-  let cardsArray = [...images, ...images];
-  let flippedCards = [];
-  let matchedCount = 0;
+  <!-- Efeitos Sonoros -->
+  <audio id="flipSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_c38d5bfa41.mp3"></audio>
+  <audio id="matchSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_8d5c64dc61.mp3"></audio>
+  <audio id="failSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_45ad1b26ab.mp3"></audio>
+  <audio id="winSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_3372d0c287.mp3"></audio>
 
-  function shuffle(array) {
-    for(let i = array.length -1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i+1));
-      [array[i], array[j]] = [array[j], array[i]];
+  <script>
+    const images = [
+      'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/AGATHA.png',
+      'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/DAYANNE.jpg',
+      'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/LOLA.jpeg',
+      'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/AMORA.jpeg',
+      'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/MIGUEL.jpeg',
+      'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/FEFE.jpeg',
+      'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/MIA.jpeg',
+      'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/LEANDRO.png',
+    ];
+
+    const game = document.getElementById('game');
+    const victoryScreen = document.getElementById('victory');
+
+    const flipSound = document.getElementById('flipSound');
+    const matchSound = document.getElementById('matchSound');
+    const failSound = document.getElementById('failSound');
+    const winSound = document.getElementById('winSound');
+
+    let cardsArray = [];
+    let flippedCards = [];
+    let matchedCount = 0;
+
+    function shuffle(array) {
+      for(let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
     }
-    return array;
-  }
 
-  function createCard(src, index) {
-    const card = document.createElement('div');
-    card.classList.add('card');
-    card.dataset.image = src;
-    card.dataset.index = index;
+    function createCard(src, index) {
+      const card = document.createElement('div');
+      card.classList.add('card');
+      card.dataset.image = src;
+      card.dataset.index = index;
 
-    card.innerHTML = `
-      <div class="card-inner">
-        <div class="card-front"></div>
-        <div class="card-back"><img src="${src}" alt="imagem"/></div>
-      </div>
-    `;
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front"></div>
+          <div class="card-back"><img src="${src}" alt="imagem"/></div>
+        </div>
+      `;
 
-    card.addEventListener('click', () => {
-      if (flippedCards.length < 2 && !card.classList.contains('flipped')) {
-        card.classList.add('flipped');
-        flippedCards.push(card);
+      card.addEventListener('click', () => {
+        if (flippedCards.length < 2 && !card.classList.contains('flipped')) {
+          card.classList.add('flipped');
+          flippedCards.push(card);
+          flipSound.currentTime = 0;
+          flipSound.play();
 
-        if (flippedCards.length === 2) {
-          checkMatch();
+          if (flippedCards.length === 2) checkMatch();
         }
-      }
-    });
+      });
 
-    return card;
-  }
-
-  function checkMatch() {
-    const [card1, card2] = flippedCards;
-    if (card1.dataset.image === card2.dataset.image) {
-      matchedCount += 2;
-      flippedCards = [];
-      if (matchedCount === cardsArray.length) {
-        setTimeout(() => alert('Parabéns! Você encontrou todos os pares!'), 600);
-      }
-    } else {
-      setTimeout(() => {
-        card1.classList.remove('flipped');
-        card2.classList.remove('flipped');
-        flippedCards = [];
-      }, 1200);
+      return card;
     }
-  }
 
-  function init() {
-    matchedCount = 0;
-    flippedCards = [];
-    game.innerHTML = '';
-    cardsArray = shuffle(cardsArray);
+    function checkMatch() {
+      const [card1, card2] = flippedCards;
 
-    cardsArray.forEach((img, i) => {
-      const card = createCard(img, i);
-      game.appendChild(card);
-    });
-  }
+      if (card1.dataset.image === card2.dataset.image) {
+        card1.classList.add('matched');
+        card2.classList.add('matched');
+        matchedCount += 2;
+        flippedCards = [];
+        matchSound.currentTime = 0;
+        matchSound.play();
 
-  init();
-</script>
+        if (matchedCount === cardsArray.length) {
+          setTimeout(() => {
+            victoryScreen.style.display = 'flex';
+            winSound.currentTime = 0;
+            winSound.play();
+          }, 600);
+        }
+      } else {
+        setTimeout(() => {
+          card1.classList.remove('flipped');
+          card2.classList.remove('flipped');
+          flippedCards = [];
+        }, 1000);
+        failSound.currentTime = 0;
+        failSound.play();
+      }
+    }
 
+    function init() {
+      matchedCount = 0;
+      flippedCards = [];
+      cardsArray = shuffle([...images, ...images]);
+      game.innerHTML = '';
+      victoryScreen.style.display = 'none';
+
+      cardsArray.forEach((img, i) => {
+        const card = createCard(img, i);
+        game.appendChild(card);
+      });
+    }
+
+    init();
+  </script>
 </body>
 </html>
