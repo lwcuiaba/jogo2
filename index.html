@@ -5,23 +5,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Jogo da Memória</title>
   <style>
+    :root {
+      --bg: #1f1f1f;
+      --card-front: #292929;
+      --card-border: #555;
+      --text-color: #fff;
+      --board-bg: rgba(40, 40, 40, 0.95);
+    }
+    body.light {
+      --bg: #e2e2e2;
+      --card-front: #f0f0f0;
+      --card-border: #aaa;
+      --text-color: #000;
+      --board-bg: rgba(255, 255, 255, 0.95);
+    }
     body {
       margin: 0;
       height: 100vh;
-      background: linear-gradient(135deg, #1f1f1f, #3a3a3a);
+      background: var(--bg);
       font-family: 'Segoe UI', sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
-      color: #fff;
+      color: var(--text-color);
       user-select: none;
+      transition: background 0.3s;
+      flex-direction: column;
+    }
+    #toggle-theme {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #666;
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    body.light #toggle-theme {
+      background: #ddd;
+      color: #000;
     }
     #game {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 12px;
       padding: 20px;
-      background: rgba(40, 40, 40, 0.95);
+      background: var(--board-bg);
       border-radius: 16px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.6);
     }
@@ -54,10 +87,10 @@
       align-items: center;
     }
     .card-front {
-      background: #292929;
-      border: 2px solid #555;
-      color: #fff;
+      background: var(--card-front);
+      border: 2px solid var(--card-border);
       font-size: 32px;
+      color: var(--text-color);
     }
     .card-front::after {
       content: "❓";
@@ -87,7 +120,7 @@
       box-shadow: 0 0 0 3px red inset;
       border-color: red !important;
     }
-    #confetti-canvas {
+    canvas {
       position: fixed;
       top: 0; left: 0;
       width: 100%;
@@ -97,8 +130,9 @@
     }
   </style>
 </head>
-<body>
+<body class="dark">
 
+<button id="toggle-theme">Alternar Tema</button>
 <canvas id="confetti-canvas"></canvas>
 <div id="game"></div>
 
@@ -123,9 +157,14 @@
   const matchSound = document.getElementById('match-sound');
   const failSound = document.getElementById('fail-sound');
   const winSound = document.getElementById('win-sound');
+  const toggleBtn = document.getElementById('toggle-theme');
   let cardsArray = [...images, ...images];
   let flippedCards = [];
   let matchedCount = 0;
+
+  toggleBtn.onclick = () => {
+    document.body.classList.toggle('light');
+  };
 
   function shuffle(array) {
     for(let i = array.length -1; i > 0; i--) {
@@ -162,6 +201,23 @@
     return card;
   }
 
+  function fireSmallConfetti() {
+    confetti({
+      particleCount: 60,
+      spread: 50,
+      origin: { y: 0.5 },
+      scalar: 0.6
+    });
+  }
+
+  function fireWinConfetti() {
+    confetti({
+      particleCount: 200,
+      spread: 100,
+      origin: { y: 0.6 }
+    });
+  }
+
   function checkMatch() {
     const [card1, card2] = flippedCards;
     if (card1.dataset.image === card2.dataset.image) {
@@ -169,16 +225,13 @@
       card2.classList.add('matched');
       matchSound.currentTime = 0;
       matchSound.play();
+      fireSmallConfetti();
       flippedCards = [];
       matchedCount += 2;
       if (matchedCount === cardsArray.length) {
         winSound.play();
         setTimeout(() => {
-          confetti({
-            particleCount: 200,
-            spread: 100,
-            origin: { y: 0.6 }
-          });
+          fireWinConfetti();
           alert('🎉 Parabéns! Você encontrou todos os pares!');
         }, 600);
       }
