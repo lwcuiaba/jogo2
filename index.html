@@ -1,169 +1,43 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Jogo da Memória</title>
-  <style>
-    :root {
-      --bg: #1f1f1f;
-      --card-front: #292929;
-      --card-border: #555;
-      --text-color: #fff;
-      --board-bg: rgba(40, 40, 40, 0.95);
-    }
-    body.light {
-      --bg: #e2e2e2;
-      --card-front: #f0f0f0;
-      --card-border: #aaa;
-      --text-color: #000;
-      --board-bg: rgba(255, 255, 255, 0.95);
-    }
-    body {
-      margin: 0;
-      height: 100vh;
-      background: var(--bg);
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: var(--text-color);
-      user-select: none;
-      transition: background 0.3s;
-      flex-direction: column;
-    }
-    #toggle-theme {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 8px;
-      background: #666;
-      color: #fff;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.3s;
-    }
-    body.light #toggle-theme {
-      background: #ddd;
-      color: #000;
-    }
-    #game {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      padding: 20px;
-      background: var(--board-bg);
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-    }
-    .card {
-      width: 75px;
-      height: 75px;
-      perspective: 600px;
-      cursor: pointer;
-      border-radius: 12px;
-    }
-    .card-inner {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform 0.5s;
-      border-radius: 12px;
-    }
-    .card.flipped .card-inner {
-      transform: rotateY(180deg);
-    }
-    .card-front, .card-back {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      backface-visibility: hidden;
-      border-radius: 12px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .card-front {
-      background: var(--card-front);
-      border: 2px solid var(--card-border);
-      font-size: 32px;
-      color: var(--text-color);
-    }
-    .card-front::after {
-      content: "❓";
-    }
-    .card-back {
-      background: #fff;
-      transform: rotateY(180deg);
-      overflow: hidden;
-      border: 2px solid #666;
-    }
-    .card-back img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 10px;
-    }
-    .matched {
-      animation: pulse 0.6s ease;
-      box-shadow: 0 0 0 3px lime inset;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-    .wrong {
-      box-shadow: 0 0 0 3px red inset;
-      border-color: red !important;
-    }
-    canvas {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 999;
-    }
-  </style>
-</head>
-<body class="dark">
-
-<button id="toggle-theme">Alternar Tema</button>
-<canvas id="confetti-canvas"></canvas>
-<div id="game"></div>
-
-<audio id="match-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-video-game-treasure-2066.mp3"></audio>
-<audio id="fail-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
-<audio id="win-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-level-completed-2059.mp3"></audio>
-
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
-  const images = [
-    'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/AGATHA.png',
-    'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/DAYANNE.jpg',
-    'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/LOLA.jpeg',
-    'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/AMORA.jpeg',
-    'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/MIGUEL.jpeg',
-    'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/FEFE.jpeg',
-    'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/MIA.jpeg',
-    'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/LEANDRO.png'
+  const allImages = {
+    AGATHA: 'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/AGATHA.png',
+    DAYANNE: 'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/DAYANNE.jpg',
+    LEANDRO: 'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/LEANDRO.png',
+    LOLA: 'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/LOLA.jpeg',
+    AMORA: 'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/AMORA.jpeg',
+    MIGUEL: 'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/MIGUEL.jpeg',
+    FEFE: 'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/FEFE.jpeg',
+    MIA: 'https://raw.githubusercontent.com/lwcuiaba/jogo2/main/MIA.jpeg'
+  };
+
+  const fases = [
+    [allImages.AGATHA, allImages.DAYANNE, allImages.LEANDRO],
+    [allImages.AGATHA, allImages.DAYANNE, allImages.LEANDRO, allImages.LOLA, allImages.AMORA],
+    Object.values(allImages)
   ];
+
+  let faseAtual = 0;
+  let cardsArray = [];
+  let flippedCards = [];
+  let matchedCount = 0;
 
   const game = document.getElementById('game');
   const matchSound = document.getElementById('match-sound');
   const failSound = document.getElementById('fail-sound');
   const winSound = document.getElementById('win-sound');
   const toggleBtn = document.getElementById('toggle-theme');
-  let cardsArray = [...images, ...images];
-  let flippedCards = [];
-  let matchedCount = 0;
+  const nextBtn = document.getElementById('next-phase');
 
-  toggleBtn.onclick = () => {
-    document.body.classList.toggle('light');
+  toggleBtn.onclick = () => document.body.classList.toggle('light');
+
+  nextBtn.onclick = () => {
+    if (faseAtual < fases.length - 1) {
+      faseAtual++;
+      iniciarFase();
+    } else {
+      alert("Você já está na última fase!");
+    }
   };
 
   function shuffle(array) {
@@ -191,10 +65,7 @@
       if (flippedCards.length < 2 && !card.classList.contains('flipped')) {
         card.classList.add('flipped');
         flippedCards.push(card);
-
-        if (flippedCards.length === 2) {
-          checkMatch();
-        }
+        if (flippedCards.length === 2) checkMatch();
       }
     });
 
@@ -202,20 +73,31 @@
   }
 
   function fireSmallConfetti() {
-    confetti({
-      particleCount: 60,
-      spread: 50,
-      origin: { y: 0.5 },
-      scalar: 0.6
-    });
+    confetti({ particleCount: 60, spread: 50, origin: { y: 0.5 }, scalar: 0.6 });
   }
 
   function fireWinConfetti() {
-    confetti({
-      particleCount: 200,
-      spread: 100,
-      origin: { y: 0.6 }
-    });
+    confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+  }
+
+  function mostrarMensagemDeVitoria(texto) {
+    const div = document.createElement('div');
+    div.textContent = texto;
+    div.style.position = 'fixed';
+    div.style.top = '50%';
+    div.style.left = '50%';
+    div.style.transform = 'translate(-50%, -50%)';
+    div.style.fontSize = '36px';
+    div.style.background = 'rgba(0,0,0,0.8)';
+    div.style.color = 'white';
+    div.style.padding = '20px 40px';
+    div.style.borderRadius = '16px';
+    div.style.zIndex = '1000';
+    document.body.appendChild(div);
+
+    setTimeout(() => {
+      div.remove();
+    }, 2500);
   }
 
   function checkMatch() {
@@ -228,12 +110,20 @@
       fireSmallConfetti();
       flippedCards = [];
       matchedCount += 2;
+
       if (matchedCount === cardsArray.length) {
         winSound.play();
-        setTimeout(() => {
-          fireWinConfetti();
-          // removido alert de parabéns
-        }, 600);
+        fireWinConfetti();
+
+        if (faseAtual < fases.length - 1) {
+          mostrarMensagemDeVitoria("🎉 Fase Concluída!");
+          setTimeout(() => {
+            faseAtual++;
+            iniciarFase();
+          }, 3000);
+        } else {
+          mostrarMensagemDeVitoria("🏁 Você venceu todas as fases!");
+        }
       }
     } else {
       card1.classList.add('wrong');
@@ -248,19 +138,17 @@
     }
   }
 
-  function init() {
+  function iniciarFase() {
     matchedCount = 0;
     flippedCards = [];
     game.innerHTML = '';
-    cardsArray = shuffle(cardsArray);
+    const imagensDaFase = fases[faseAtual];
+    cardsArray = shuffle([...imagensDaFase, ...imagensDaFase]);
     cardsArray.forEach((img, i) => {
-      const card = createCard(img, i);
-      game.appendChild(card);
+      const carta = createCard(img, i);
+      game.appendChild(carta);
     });
   }
 
-  init();
+  iniciarFase();
 </script>
-
-</body>
-</html>
