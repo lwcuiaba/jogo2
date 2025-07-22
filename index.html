@@ -206,28 +206,57 @@
     return array;
   }
 
-  function createCard(src, index) {
-    const card = document.createElement('div');
-    card.classList.add('card');
-    card.dataset.image = src;
-    card.dataset.index = index;
+ function falarNome(nome) {
+  const synth = window.speechSynthesis;
+  const utterance = new SpeechSynthesisUtterance(nome);
+  utterance.lang = 'pt-BR';
+  utterance.rate = 0.9;
+  synth.cancel(); // evita sobreposição
+  synth.speak(utterance);
+}
 
-    card.innerHTML = `
-      <div class="card-inner">
-        <div class="card-front"></div>
-        <div class="card-back"><img src="${src}" alt="imagem"/></div>
-      </div>
-    `;
+function obterNomeFalado(src) {
+  switch (src) {
+    case allImages.AGATHA: return "ágata";
+    case allImages.DAYANNE: return "mamãe";
+    case allImages.LEANDRO: return "papai";
+    case allImages.LOLA: return "lola";
+    case allImages.AMORA: return "amora";
+    case allImages.MIGUEL: return "miguel";
+    case allImages.FEFE: return "fefê";
+    case allImages.MIA: return "mia";
+    default: return "";
+  }
+}
 
-    card.addEventListener('click', () => {
-      if (flippedCards.length < 2 && !card.classList.contains('flipped') && !card.classList.contains('matched')) {
-        card.classList.add('flipped');
-        flippedCards.push(card);
-        if (flippedCards.length === 2) checkMatch();
-      }
-    });
+function createCard(src, index) {
+  const card = document.createElement('div');
+  card.classList.add('card');
+  card.dataset.image = src;
+  card.dataset.index = index;
 
-    return card;
+  card.innerHTML = `
+    <div class="card-inner">
+      <div class="card-front"></div>
+      <div class="card-back"><img src="${src}" alt="imagem"/></div>
+    </div>
+  `;
+
+  card.addEventListener('click', () => {
+    if (flippedCards.length < 2 && !card.classList.contains('flipped') && !card.classList.contains('matched')) {
+      card.classList.add('flipped');
+      flippedCards.push(card);
+
+      // Fala o nome da imagem
+      const nomeFalado = obterNomeFalado(src);
+      if (nomeFalado) falarNome(nomeFalado);
+
+      if (flippedCards.length === 2) checkMatch();
+    }
+  });
+
+  return card;
+
   }
 
   function fireSmallConfetti() {
